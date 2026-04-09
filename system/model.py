@@ -3,7 +3,7 @@ import math
 
 class SystemModel:
 
-    def __init__(self,system,dt=0.01):
+    def __init__(self,system,dt):
         self.A = system[0]
         self.B = system[1]
         self.C = system[2]
@@ -22,7 +22,6 @@ class SystemModel:
     def step(self, u):
         x_dot = (self.A @ self.state) + (self.B @ u)
         self.state = self.state + (x_dot * self.dt)
-
         return self.state
     
     def output(self,u):
