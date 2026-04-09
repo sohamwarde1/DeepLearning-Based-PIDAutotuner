@@ -3,14 +3,14 @@ import math
 
 class SystemModel:
 
-    def __init__(self,A,B,C,D,dt=0.01):
-        self.A = A
-        self.B = B
-        self.C = C
-        self.D = D
+    def __init__(self,system,dt=0.01):
+        self.A = system[0]
+        self.B = system[1]
+        self.C = system[2]
+        self.D = system[3]
         self.dt = dt
 
-        self.n_states = A.shape[0]
+        self.n_states = self.A.shape[0]
         self.state = np.zeros(shape=(self.n_states,1))
 
     def reset(self,x0=None):
@@ -20,23 +20,13 @@ class SystemModel:
             self.state = x0.copy()
 
     def step(self, u):
-        self.u = u
+        x_dot = (self.A @ self.state) + (self.B @ u)
+        self.state = self.state + (x_dot * self.dt)
 
-        x_dot = (self.A @ self.state) + (self.B @ self.u)
+        return self.state
+    
+    def output(self,u):
         y = (self.C @ self.state) + (self.D @ u)
-
-        self.state = self.state + (x_dot*self.dt)
-
         return y
 
-A = np.array([[-1]])
-B = np.array([[1]])
-C = np.array([[1]])
-D = np.array([[0]])
-
-sys = SystemModel(A, B, C, D)
-
-for _ in range(1000):
-    y = sys.step(np.array([[1]]))
-    print(y)
 
