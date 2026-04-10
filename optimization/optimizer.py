@@ -11,7 +11,7 @@ plt.ion()  # interactive mode
 fig, ax = plt.subplots()
 
 class RandomSearchPIDTuner:
-    def __init__(self,system,setpoint,T,dt,u_ini, n_samples=100):
+    def __init__(self,system,setpoint,T,dt,u_ini, n_samples=500):
         """
         simulate_fn: function(Kp, Ki, Kd) -> cost
         n_samples: number of random trials
@@ -25,6 +25,7 @@ class RandomSearchPIDTuner:
         self.u_ini = u_ini
         self.best_cost = float('inf')
         self.best_params = None
+        self.best_records = []
 
         self.log = []
 
@@ -65,11 +66,16 @@ class RandomSearchPIDTuner:
                 print(f"[{i}] New best:")
                 print(f"    Kp={kp:.4f}, Ki={ki:.4f}, Kd={kd:.4f}")
                 print(f"    Cost={cost:.4f}")
-
-                self.update_plot(
-                    history,
-                    title=f"Kp={kp:.2f}, Ki={ki:.2f}, Kd={kd:.2f}"
-                )
+                self.best_records.append({
+                "kp": kp,
+                "ki": ki,
+                "kd": kd,
+                "cost": cost,
+                "history": history
+                })
+            if i%10 == 0:
+                print("Epoch :",i)
+                
 
         return self.best_params, self.best_cost
 
@@ -80,15 +86,22 @@ class RandomSearchPIDTuner:
     def get_best(self):
         return self.best_params, self.best_cost
     
-    def update_plot(self,history, title=""):
-        setpoint = self.setpoint
-        y_vals = [y for y, _ in history]
-        t = range(len(y_vals))
+    def replay_best(self,records, setpoint, delay=1):
+        plt.ion()
+        fig, ax = plt.subplots()
 
-        ax.clear()
-        ax.plot(t, y_vals, label="Output")
-        ax.plot(t, [setpoint]*len(t), '--', label="Setpoint")
+        for _, record in enumerate(records):
+            y_vals = [y for y, _ in record["history"]]
+            t = range(len(y_vals))
 
-        ax.set_title(title)
-        ax.legend()
-        plt.pause(0.01)
+            ax.clear()
+            ax.plot(t, y_vals, label="Output")
+            ax.plot(t, [setpoint]*len(t), 'k--', label="Setpoint")
+
+            ax.set_title(
+                f"Kp={record['kp']:.2f}, Ki={record['ki']:.2f}, Kd={record['kd']:.2f}"
+            )
+            ax.legend()
+
+            fig.canvas.draw()   # <-- add this
+            plt.pause(delay)
