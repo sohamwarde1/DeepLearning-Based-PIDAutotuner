@@ -1,5 +1,6 @@
 from system.model import SystemModel
 from controller.PID import PID
+import numpy as np
 
 class Runner:
     
@@ -25,7 +26,7 @@ class Runner:
 
             history.append((y,u))
         
-        return history
+        return np.array(history).squeeze()
 
 
 
